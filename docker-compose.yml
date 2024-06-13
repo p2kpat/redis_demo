@@ -1,0 +1,47 @@
+# This is docker-compose schema version, use latest version.
+version: '3.3'
+services:
+# Name the service you are creating the container for.
+   nginx:
+# Specify the container image here and version
+     image: nginx:latest
+# Provide the container name otherwise scaling will not be successful
+     container_name: nginx_server
+# Define a port range for the maximum number of scalable ips you would like. This is also         for port forwarding. 
+     ports:
+      - "8000-8010:80"
+# Specify the network to be used- this is configured at the bottom of the docker-compose file.
+     networks:
+      - redis-net
+
+# Second service (redis server)
+   redis:
+     image: ppatel98/my_redis_demo:0.1
+     container_name: redis_server_custom_image
+     volumes:
+       - ./redis.conf:/usr/local/etc/redis/redis.conf
+       - redis_storage:/data
+     ports:
+       -  "6379:6379"
+     networks:
+       - redis-net
+     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+     deploy:
+         restart_policy:
+             condition: on-failure
+     privileged: true
+
+# Define a network to be created for the containers.
+networks: 
+ redis-net:
+   driver: bridge
+   ipam:
+     driver: default
+     config:
+       - subnet: 172.31.15.0/28
+#        gateway: 172.31.15.1
+#        with ipam the gateway is not needed as docker manages the gateway.
+
+# Define the volumes used in the docker compose file
+volumes:
+ redis_storage:
